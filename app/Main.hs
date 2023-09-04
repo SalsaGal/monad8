@@ -2,7 +2,6 @@
 
 module Main where
 
-import State
 import           Control.Monad
 import           Data.Array.Base
 import           Data.Array.Storable
@@ -11,6 +10,7 @@ import           Foreign.C
 import qualified Foreign.Marshal.Array as Marshal
 import           Linear
 import qualified SDL
+import           State
 
 width, height :: Num a => a
 width = 64
@@ -67,9 +67,12 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
+        let newState = update 0x1000 state
+        print newState
+
         keyState <- SDL.getKeyboardState
         newTimingInfo <- updateTiming timingInfo <$> SDL.time
-        unless (keyState SDL.ScancodeEscape) (loop state newTimingInfo)
+        unless (keyState SDL.ScancodeEscape) (loop newState newTimingInfo)
 
   time <- SDL.time
   loop defaultState $ TimingInfo time time
