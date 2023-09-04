@@ -21,18 +21,28 @@ withWindow action = do
   SDL.destroyRenderer renderer
   SDL.destroyWindow window
 
+data TimingInfo = TimingInfo
+  { time :: Float
+  , lastUpdate :: Float
+  }
+
+updateTiming :: TimingInfo -> Float -> TimingInfo
+updateTiming timingInfo newTime = timingInfo { lastUpdate = time timingInfo, time = newTime }
+
 main :: IO ()
 main = withWindow $ \window renderer -> do
   texture <- SDL.createTexture renderer SDL.RGBA8888 SDL.TextureAccessStreaming (V2 width height)
 
-  let loop deltaTime = do
+  let loop timingInfo = do
         SDL.pollEvents
 
         SDL.present renderer
 
         keyState <- SDL.getKeyboardState
-        unless (keyState SDL.ScancodeEscape) (loop deltaTime)
+        newTimingInfo <- updateTiming timingInfo <$> SDL.time
+        unless (keyState SDL.ScancodeEscape) (loop newTimingInfo)
 
-  loop 0
+  time <- SDL.time
+  loop $ TimingInfo time time
 
   SDL.destroyTexture texture
