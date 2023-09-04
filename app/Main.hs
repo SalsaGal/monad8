@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
+
+import State
 import           Control.Monad
 import           Data.Array.Base
 import           Data.Array.Storable
@@ -57,7 +59,7 @@ main = withWindow $ \window renderer -> do
   pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
   withStorableArray pixelBuffer render
 
-  let loop timingInfo = do
+  let loop state timingInfo = do
         SDL.pollEvents
 
         withStorableArray pixelBuffer (upload texture width height)
@@ -67,9 +69,9 @@ main = withWindow $ \window renderer -> do
 
         keyState <- SDL.getKeyboardState
         newTimingInfo <- updateTiming timingInfo <$> SDL.time
-        unless (keyState SDL.ScancodeEscape) (loop newTimingInfo)
+        unless (keyState SDL.ScancodeEscape) (loop state newTimingInfo)
 
   time <- SDL.time
-  loop $ TimingInfo time time
+  loop defaultState $ TimingInfo time time
 
   SDL.destroyTexture texture

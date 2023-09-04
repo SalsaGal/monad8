@@ -1,5 +1,8 @@
 [default]
 cabal run monad8
 
+[default:build]
+cabal build monad8
+
 [format]
 stylish-haskell app/*.hs -i
