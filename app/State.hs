@@ -1,8 +1,4 @@
-module State
-( SystemState
-, defaultState
-, update
-) where
+module State where
 
 import           Data.Bits
 

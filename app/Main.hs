@@ -59,6 +59,14 @@ main = withWindow $ \window renderer -> do
   pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
   withStorableArray pixelBuffer render
 
+  let instructions =
+        [ 0x0000
+        , 0x0000
+        , 0x0000
+        , 0x0000
+        , 0x1000
+        ]
+
   let loop state timingInfo = do
         SDL.pollEvents
 
@@ -67,7 +75,7 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
-        let newState = update 0x1000 state
+        let newState = update (instructions !! programCounter state) state
         print newState
 
         keyState <- SDL.getKeyboardState
