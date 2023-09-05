@@ -10,7 +10,7 @@ data SystemState = SystemState
   , screen         :: [[Bool]]
   , programCounter :: Int
   , vRegisters     :: [Word8]
-  , indexRegister  :: Word16      -- Meant to be 12 bits
+  , indexRegister  :: Word16
   } deriving Show
 
 blankScreen :: [[Bool]]
