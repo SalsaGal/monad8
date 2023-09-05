@@ -7,6 +7,7 @@ import           Data.Array.Base
 import           Data.Array.Storable
 import           Data.ByteString       (ByteString, unpack)
 import qualified Data.ByteString
+import Debug
 import           Foreign
 import           Foreign.C
 import qualified Foreign.Marshal.Array as Marshal
@@ -71,6 +72,10 @@ main = withWindow $ \window renderer -> do
   texture <- SDL.createTexture renderer SDL.RGBA8888 SDL.TextureAccessStreaming (V2 width height)
 
   let state = newState instructions
+  let debugOptions = DebugOptions {
+      printOpcode = False,
+      printAddress = False
+    }
 
   pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
 
@@ -83,7 +88,7 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
-        newState <- update state
+        newState <- update debugOptions state
 
         keyState <- SDL.getKeyboardState
         newTimingInfo <- updateTiming timingInfo <$> SDL.time

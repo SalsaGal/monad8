@@ -3,6 +3,7 @@ module State where
 import           Data.Bits
 import           Data.Word
 import Debug
+import Control.Monad
 
 data SystemState = SystemState
   { memory         :: [Word8]
@@ -25,13 +26,13 @@ newState memory = SystemState
   , vRegisters = replicate 0xf 0
   }
 
-update :: SystemState -> IO SystemState
-update state = do
+update :: DebugOptions ->  SystemState -> IO SystemState
+update debug state = do
   let instructions = memory state
   let pc = programCounter state
-  printHex "PC" pc
+  when (printAddress debug) $ printHex "PC" pc
   let opcode = 0x100 * fromIntegral (instructions !! pc) + fromIntegral (instructions !! (pc + 1))
-  printHex "Opcode" opcode
+  when (printOpcode debug) $ printHex "Opcode" opcode
 
   return $ case opcode of
     0x00e0 -> incrementPC state { screen = blankScreen }
