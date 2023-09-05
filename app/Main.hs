@@ -5,16 +5,16 @@ module Main where
 import           Control.Monad
 import           Data.Array.Base
 import           Data.Array.Storable
+import           Data.ByteString       (ByteString, unpack)
+import qualified Data.ByteString
 import           Foreign
 import           Foreign.C
 import qualified Foreign.Marshal.Array as Marshal
+import           GHC.Integer           (wordToInteger)
 import           Linear
 import qualified SDL
 import           State
-import System.Environment
-import qualified Data.ByteString
-import Data.ByteString (ByteString, unpack)
-import GHC.Integer (wordToInteger)
+import           System.Environment
 
 width, height :: Num a => a
 width = 64
