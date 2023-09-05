@@ -12,7 +12,7 @@ data SystemState = SystemState
   { memory         :: [Word8]
   , screen         :: [[Bool]]
   , programCounter :: Int
-  , v0             :: Int
+  , vRegisters     :: [Word8]
   } deriving Show
 
 blankScreen :: [[Bool]]
@@ -26,7 +26,7 @@ newState memory = SystemState
   { memory = replicate 0x200 0 ++ memory
   , screen = blankScreen
   , programCounter = 0x200
-  , v0 = 0
+  , vRegisters = replicate 0xf 0
   }
 
 update :: SystemState -> IO SystemState
@@ -41,4 +41,9 @@ update state = do
     0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xF000 of
       0x1000 -> state { programCounter = opcode .&. 0x0FFF }
+      0x6000 -> do
+        let regs = vRegisters state
+        let register = opcode .&. 0x0F00 `div` 0x0F00
+        let value = opcode .&. 0x00FF
+        incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop register regs }
       _      -> incrementPC state
