@@ -11,7 +11,6 @@ import qualified Foreign.Marshal.Array as Marshal
 import           Linear
 import qualified SDL
 import           State
-import Text.Printf
 import System.Environment
 import qualified Data.ByteString
 import Data.ByteString (ByteString, unpack)
@@ -20,9 +19,6 @@ import GHC.Integer (wordToInteger)
 width, height :: Num a => a
 width = 64
 height = 32
-
-printHex :: PrintfArg a => a -> IO ()
-printHex = printf "0x%04x\n"
 
 chunks :: Int -> [a] -> [[a]]
 chunks _ [] = []
@@ -84,12 +80,7 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
-        -- putStr "PC: "
-        -- printHex $ programCounter state
-        -- putStr "Opcode: "
-        -- printHex $ instructions !! programCounter state
-
-        let newState = update instructions state
+        newState <- update instructions state
         print newState
 
         keyState <- SDL.getKeyboardState

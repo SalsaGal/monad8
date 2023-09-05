@@ -2,6 +2,11 @@ module State where
 
 import           Data.Bits
 import Data.Word
+import Text.Printf
+
+-- TODO add label
+printHex :: PrintfArg a => a -> IO ()
+printHex = printf "0x%04x\n"
 
 data SystemState = SystemState
   { programCounter :: Int
@@ -14,11 +19,15 @@ defaultState = SystemState
   , v0 = 0
   }
 
-update :: [Word8] -> SystemState -> SystemState
+update :: [Word8] -> SystemState -> IO SystemState
 update instructions state = do
   let pc = programCounter state
+  putStr "PC: "
+  printHex pc
   let opcode = fromIntegral (instructions !! pc) + 0x100 * fromIntegral (instructions !! (pc + 1))
+  putStr "Opcode: "
+  printHex opcode
 
-  case opcode .&. 0xF000 of
+  return $ case opcode .&. 0xF000 of
     0x1000 -> state { programCounter = opcode .&. 0x0FFF }
     _      -> state { programCounter = programCounter state + 1 }
