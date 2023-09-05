@@ -2,11 +2,7 @@ module State where
 
 import           Data.Bits
 import           Data.Word
-import           Text.Printf
-
-printHex :: PrintfArg a => String -> a -> IO ()
-printHex ""    = printf "0x%04x\n"
-printHex label = printf $ label ++ ": 0x%04x\n"
+import Debug
 
 data SystemState = SystemState
   { memory         :: [Word8]
