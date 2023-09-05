@@ -31,7 +31,7 @@ withWindow :: (SDL.Window -> SDL.Renderer -> IO ()) -> IO ()
 withWindow action = do
   SDL.initializeAll
 
-  window <- SDL.createWindow "Monad-8" SDL.defaultWindow { SDL.windowInitialSize = V2 (width * 10) (height * 20) }
+  window <- SDL.createWindow "Monad-8" SDL.defaultWindow { SDL.windowInitialSize = V2 (width * 10) (height * 10) }
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
 
   action window renderer
@@ -44,13 +44,14 @@ data TimingInfo = TimingInfo
   , lastUpdate :: Float
   }
 
-render :: Ptr CUInt -> IO ()
-render buf = forM_ [0..height - 1] $ \y -> do
+render :: [[Bool]] -> Ptr CUInt -> IO ()
+render screen buf = forM_ [0..height - 1] $ \y -> do
   forM_ [0..width - 1] $ \x -> do
     let index = width * y + x
     forM_ [0..4] (\i -> do
         let pixel = plusPtr buf $ index * 4 + i
-        poke pixel $ CUInt 255
+        let color = screen !! y !! x
+        poke pixel $ if color then CUInt 255 else CUInt 0
       )
 
 upload :: SDL.Texture -> Int -> Int -> Ptr CUInt -> IO ()
@@ -65,16 +66,18 @@ updateTiming timingInfo newTime = timingInfo { lastUpdate = time timingInfo, tim
 
 main :: IO ()
 main = withWindow $ \window renderer -> do
+  instructions <- getArgs >>= fmap unpack . Data.ByteString.readFile . Prelude.head
+
   texture <- SDL.createTexture renderer SDL.RGBA8888 SDL.TextureAccessStreaming (V2 width height)
 
-  pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
-  withStorableArray pixelBuffer render
+  let state = newState instructions
 
-  instructions <- getArgs >>= fmap unpack . Data.ByteString.readFile . Prelude.head
+  pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
 
   let loop state timingInfo = do
         SDL.pollEvents
 
+        withStorableArray pixelBuffer $ render $ screen state
         withStorableArray pixelBuffer (upload texture width height)
         SDL.copy renderer texture Nothing Nothing
 
@@ -87,6 +90,6 @@ main = withWindow $ \window renderer -> do
         unless (keyState SDL.ScancodeEscape) (loop newState newTimingInfo)
 
   time <- SDL.time
-  loop (newState instructions) $ TimingInfo time time
+  loop state $ TimingInfo time time
 
   SDL.destroyTexture texture

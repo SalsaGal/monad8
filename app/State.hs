@@ -10,6 +10,7 @@ printHex label = printf $ label ++ ": 0x%04x\n"
 
 data SystemState = SystemState
   { memory         :: [Word8]
+  , screen         :: [[Bool]]
   , programCounter :: Int
   , v0             :: Int
   } deriving Show
@@ -17,6 +18,7 @@ data SystemState = SystemState
 newState :: [Word8] -> SystemState
 newState memory = SystemState
   { memory = replicate 0x200 0 ++ memory
+  , screen = replicate 32 $ replicate 64 False
   , programCounter = 0x200
   , v0 = 0
   }
