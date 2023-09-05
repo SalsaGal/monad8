@@ -15,10 +15,13 @@ data SystemState = SystemState
   , v0             :: Int
   } deriving Show
 
+blankScreen :: [[Bool]]
+blankScreen = replicate 32 $ replicate 64 False
+
 newState :: [Word8] -> SystemState
 newState memory = SystemState
   { memory = replicate 0x200 0 ++ memory
-  , screen = replicate 32 $ replicate 64 False
+  , screen = blankScreen
   , programCounter = 0x200
   , v0 = 0
   }
@@ -31,6 +34,8 @@ update state = do
   let opcode = 0x100 * fromIntegral (instructions !! pc) + fromIntegral (instructions !! (pc + 1))
   printHex "Opcode" opcode
 
-  return $ case opcode .&. 0xF000 of
-    0x1000 -> state { programCounter = opcode .&. 0x0FFF }
-    _      -> state { programCounter = programCounter state + 2 }
+  return $ case opcode of
+    0x00e0 -> state { programCounter = programCounter state + 2, screen = blankScreen }
+    _ -> case opcode .&. 0xF000 of
+      0x1000 -> state { programCounter = opcode .&. 0x0FFF }
+      _      -> state { programCounter = programCounter state + 2 }
