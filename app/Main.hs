@@ -21,7 +21,7 @@ width, height :: Num a => a
 width = 64
 height = 32
 
-printHex :: Int -> IO ()
+printHex :: PrintfArg a => a -> IO ()
 printHex = printf "0x%04x\n"
 
 chunks :: Int -> [a] -> [[a]]
@@ -74,7 +74,7 @@ main = withWindow $ \window renderer -> do
   pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
   withStorableArray pixelBuffer render
 
-  instructions <- getArgs >>= fmap byteStringToInts . Data.ByteString.readFile . Prelude.head
+  instructions <- getArgs >>= fmap unpack . Data.ByteString.readFile . Prelude.head
 
   let loop state timingInfo = do
         SDL.pollEvents
@@ -84,12 +84,12 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
-        putStr "PC: "
-        printHex $ programCounter state
-        putStr "Opcode: "
-        printHex $ instructions !! programCounter state
+        -- putStr "PC: "
+        -- printHex $ programCounter state
+        -- putStr "Opcode: "
+        -- printHex $ instructions !! programCounter state
 
-        let newState = update (instructions !! programCounter state) state
+        let newState = update instructions state
         print newState
 
         keyState <- SDL.getKeyboardState
