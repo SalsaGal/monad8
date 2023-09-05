@@ -9,23 +9,26 @@ printHex ""    = printf "0x%04x\n"
 printHex label = printf $ label ++ ": 0x%04x\n"
 
 data SystemState = SystemState
-  { programCounter :: Int
+  { memory         :: [Word8]
+  , programCounter :: Int
   , v0             :: Int
   } deriving Show
 
-defaultState :: SystemState
-defaultState = SystemState
-  { programCounter = 0
+newState :: [Word8] -> SystemState
+newState memory = SystemState
+  { memory = replicate 0x200 0 ++ memory
+  , programCounter = 0x200
   , v0 = 0
   }
 
-update :: [Word8] -> SystemState -> IO SystemState
-update instructions state = do
+update :: SystemState -> IO SystemState
+update state = do
+  let instructions = memory state
   let pc = programCounter state
   printHex "PC" pc
-  let opcode = fromIntegral (instructions !! pc) + 0x100 * fromIntegral (instructions !! (pc + 1))
+  let opcode = 0x100 * fromIntegral (instructions !! pc) + fromIntegral (instructions !! (pc + 1))
   printHex "Opcode" opcode
 
   return $ case opcode .&. 0xF000 of
     0x1000 -> state { programCounter = opcode .&. 0x0FFF }
-    _      -> state { programCounter = programCounter state + 1 }
+    _      -> state { programCounter = programCounter state + 2 }

@@ -80,14 +80,13 @@ main = withWindow $ \window renderer -> do
 
         SDL.present renderer
 
-        newState <- update instructions state
-        print newState
+        newState <- update state
 
         keyState <- SDL.getKeyboardState
         newTimingInfo <- updateTiming timingInfo <$> SDL.time
         unless (keyState SDL.ScancodeEscape) (loop newState newTimingInfo)
 
   time <- SDL.time
-  loop defaultState $ TimingInfo time time
+  loop (newState instructions) $ TimingInfo time time
 
   SDL.destroyTexture texture
