@@ -1,5 +1,5 @@
 [default]
-cabal run monad8
+cabal run monad8 -- chip8-roms/programs/IBM\ Logo.ch8
 
 [default:build]
 cabal build monad8

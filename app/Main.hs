@@ -11,10 +11,25 @@ import qualified Foreign.Marshal.Array as Marshal
 import           Linear
 import qualified SDL
 import           State
+import Text.Printf
+import System.Environment
+import qualified Data.ByteString
+import Data.ByteString (ByteString, unpack)
+import GHC.Integer (wordToInteger)
 
 width, height :: Num a => a
 width = 64
 height = 32
+
+printHex :: Int -> IO ()
+printHex = printf "0x%04x\n"
+
+chunks :: Int -> [a] -> [[a]]
+chunks _ [] = []
+chunks i xs = take i xs : chunks i (drop i xs)
+
+byteStringToInts :: ByteString -> [Int]
+byteStringToInts = map (\[a, b] -> a * 0x100 + b) . chunks 2 . map fromIntegral . unpack
 
 withWindow :: (SDL.Window -> SDL.Renderer -> IO ()) -> IO ()
 withWindow action = do
@@ -59,13 +74,7 @@ main = withWindow $ \window renderer -> do
   pixelBuffer <- Data.Array.Storable.newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
   withStorableArray pixelBuffer render
 
-  let instructions =
-        [ 0x0000
-        , 0x0000
-        , 0x0000
-        , 0x0000
-        , 0x1000
-        ]
+  instructions <- getArgs >>= fmap byteStringToInts . Data.ByteString.readFile . Prelude.head
 
   let loop state timingInfo = do
         SDL.pollEvents
@@ -74,6 +83,11 @@ main = withWindow $ \window renderer -> do
         SDL.copy renderer texture Nothing Nothing
 
         SDL.present renderer
+
+        putStr "PC: "
+        printHex $ programCounter state
+        putStr "Opcode: "
+        printHex $ instructions !! programCounter state
 
         let newState = update (instructions !! programCounter state) state
         print newState
