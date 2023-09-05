@@ -18,6 +18,9 @@ data SystemState = SystemState
 blankScreen :: [[Bool]]
 blankScreen = replicate 32 $ replicate 64 False
 
+incrementPC :: SystemState -> SystemState
+incrementPC state = state { programCounter = programCounter state + 2 }
+
 newState :: [Word8] -> SystemState
 newState memory = SystemState
   { memory = replicate 0x200 0 ++ memory
@@ -35,7 +38,7 @@ update state = do
   printHex "Opcode" opcode
 
   return $ case opcode of
-    0x00e0 -> state { programCounter = programCounter state + 2, screen = blankScreen }
+    0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xF000 of
       0x1000 -> state { programCounter = opcode .&. 0x0FFF }
-      _      -> state { programCounter = programCounter state + 2 }
+      _      -> incrementPC state
