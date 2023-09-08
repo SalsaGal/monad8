@@ -2,6 +2,7 @@
 
 module Main where
 
+import           Config
 import           Control.Monad
 import           Data.Array.Base
 import           Data.Array.Storable
@@ -45,14 +46,16 @@ data TimingInfo = TimingInfo
   , lastUpdate :: Float
   }
 
-render :: [[Bool]] -> Ptr CUInt -> IO ()
-render screen buf = forM_ [0..height - 1] $ \y -> do
+render :: SystemConfig -> [[Bool]] -> Ptr CUInt -> IO ()
+render config screen buf = forM_ [0..height - 1] $ \y -> do
   forM_ [0..width - 1] $ \x -> do
     let index = width * y + x
-    forM_ [0..3] (\i -> do
+    -- For some reason these seem to be ABGR? TODO Work out why
+    let colors = reverse $ zip (onColor config) (offColor config)
+    forM_ (zip [0..3] colors) (\(i, (on, off)) -> do
         let pixel = plusPtr buf $ index * 4 + i
         let color = screen !! y !! x
-        poke pixel $ if color then CUInt 255 else CUInt 0
+        poke pixel $ if color then on else off
       )
 
 upload :: SDL.Texture -> Int -> Int -> Ptr CUInt -> IO ()
@@ -82,7 +85,7 @@ main = withWindow $ \window renderer -> do
   let loop state timingInfo = do
         SDL.pollEvents
 
-        withStorableArray pixelBuffer $ render $ screen state
+        withStorableArray pixelBuffer $ render defaultConfig $ screen state
         withStorableArray pixelBuffer (upload texture width height)
         SDL.copy renderer texture Nothing Nothing
 
