@@ -51,10 +51,10 @@ update debug state = do
             let spriteY = vRegisters state !! (fromIntegral opcode .&. 0x00f0 `div` 0x0010)
             let height = opcode .&. 0x000f
             zipWith (\y row -> zipWith (\x pixel ->
-                if x > spriteX && x <= spriteX + 8 && y > spriteY && y <= spriteY + fromIntegral height
+                if x >= spriteX && x < spriteX + 8 && y >= spriteY && y < spriteY + fromIntegral height
                   then do
-                    let byte = fromIntegral $ y - spriteY - 1 :: Int
-                    let bit = fromIntegral $ x - spriteX - 1  :: Int
+                    let byte = fromIntegral $ y - spriteY :: Int
+                    let bit = fromIntegral $ x - spriteX  :: Int
                     0 /= ((128 `shiftR` bit) .&. instructions !! (fromIntegral (indexRegister state) + byte))
                   else screen state !! fromIntegral y !! fromIntegral x
               ) [0 :: Word8 ..] row) [0 :: Word8 ..] (screen state)
