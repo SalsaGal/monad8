@@ -1,9 +1,9 @@
 module State where
 
+import           Control.Monad
 import           Data.Bits
 import           Data.Word
-import Debug
-import Control.Monad
+import           Debug
 
 data SystemState = SystemState
   { memory         :: [Word8]
@@ -36,14 +36,26 @@ update debug state = do
   let opcode = 0x100 * fromIntegral (instructions !! pc) + fromIntegral (instructions !! (pc + 1))
   when (printOpcode debug) $ printHex "Opcode" opcode
 
+  when (opcode .&. 0xf000 == 0xd000) $ print $ vRegisters state
+
   return $ case opcode of
     0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xf000 of
       0x1000 -> state { programCounter = opcode .&. 0x0fff }
       0x6000 -> do
         let regs = vRegisters state
-        let register = opcode .&. 0x0f00 `div` 0x0f00
+        let register = opcode .&. 0x0f00 `div` 0x0100
         let value = opcode .&. 0x00ff
-        incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop register regs }
+        incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop (register + 1) regs }
       0xa000 -> incrementPC state { indexRegister = fromIntegral opcode .&. 0x0fff }
+      0xd000 -> incrementPC state { screen = do
+            let spriteX = fromIntegral $ vRegisters state !! (opcode .&. 0x0f00 `div` 0x0100)
+            let spriteY = fromIntegral $ vRegisters state !! (opcode .&. 0x00f0 `div` 0x0010)
+            let height = fromIntegral $ opcode .&. 0x000f
+            zipWith (\y row -> zipWith (\x pixel ->
+                if x > spriteX && x <= spriteX + 8 && y > spriteY && y <= spriteY + height
+                  then True
+                  else screen state !! y !! x
+              ) [0..] row) [0..] (screen state)
+          }
       _      -> incrementPC state
