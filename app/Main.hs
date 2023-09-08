@@ -49,7 +49,7 @@ render :: [[Bool]] -> Ptr CUInt -> IO ()
 render screen buf = forM_ [0..height - 1] $ \y -> do
   forM_ [0..width - 1] $ \x -> do
     let index = width * y + x
-    forM_ [0..4] (\i -> do
+    forM_ [0..3] (\i -> do
         let pixel = plusPtr buf $ index * 4 + i
         let color = screen !! y !! x
         poke pixel $ if color then CUInt 255 else CUInt 0
