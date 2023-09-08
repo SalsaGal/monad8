@@ -8,7 +8,7 @@ import           Debug
 data SystemState = SystemState
   { memory         :: [Word8]
   , screen         :: [[Bool]]
-  , programCounter :: Int
+  , programCounter :: Word16
   , vRegisters     :: [Word8]
   , indexRegister  :: Word16
   } deriving Show
@@ -33,7 +33,7 @@ update debug state = do
   let instructions = memory state
   let pc = programCounter state
   when (printAddress debug) $ printHex "PC" pc
-  let opcode = 0x100 * fromIntegral (instructions !! pc) + fromIntegral (instructions !! (pc + 1))
+  let opcode = 0x100 * fromIntegral (instructions !! fromIntegral pc) + fromIntegral (instructions !! (fromIntegral pc + 1)) :: Word16
   when (printOpcode debug) $ printHex "Opcode" opcode
 
   when (opcode .&. 0xf000 == 0xd000) $ print $ vRegisters state
@@ -44,18 +44,18 @@ update debug state = do
       0x1000 -> state { programCounter = opcode .&. 0x0fff }
       0x6000 -> do
         let regs = vRegisters state
-        let register = opcode .&. 0x0f00 `div` 0x0100
-        let value = opcode .&. 0x00ff
+        let register = fromIntegral opcode .&. 0x0f00 `div` 0x0100
+        let value = fromIntegral opcode .&. 0x00ff :: Word8
         incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop (register + 1) regs }
       0xa000 -> incrementPC state { indexRegister = fromIntegral opcode .&. 0x0fff }
       0xd000 -> incrementPC state { screen = do
-            let spriteX = fromIntegral $ vRegisters state !! (opcode .&. 0x0f00 `div` 0x0100)
-            let spriteY = fromIntegral $ vRegisters state !! (opcode .&. 0x00f0 `div` 0x0010)
-            let height = fromIntegral $ opcode .&. 0x000f
+            let spriteX = vRegisters state !! (fromIntegral opcode .&. 0x0f00 `div` 0x0100)
+            let spriteY = vRegisters state !! (fromIntegral opcode .&. 0x00f0 `div` 0x0010)
+            let height = opcode .&. 0x000f
             zipWith (\y row -> zipWith (\x pixel ->
-                if x > spriteX && x <= spriteX + 8 && y > spriteY && y <= spriteY + height
+                if x > spriteX && x <= spriteX + 8 && y > spriteY && y <= spriteY + fromIntegral height
                   then True
-                  else screen state !! y !! x
-              ) [0..] row) [0..] (screen state)
+                  else screen state !! fromIntegral y !! fromIntegral x
+              ) [0 :: Word8 ..] row) [0 :: Word8 ..] (screen state)
           }
       _      -> incrementPC state
