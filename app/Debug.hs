@@ -1,8 +1,8 @@
 module Debug where
-import Text.Printf
+import           Text.Printf
 
 data DebugOptions = DebugOptions
-  { printOpcode :: Bool
+  { printOpcode  :: Bool
   , printAddress :: Bool
   }
 

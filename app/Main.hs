@@ -7,7 +7,7 @@ import           Data.Array.Base
 import           Data.Array.Storable
 import           Data.ByteString       (ByteString, unpack)
 import qualified Data.ByteString
-import Debug
+import           Debug
 import           Foreign
 import           Foreign.C
 import qualified Foreign.Marshal.Array as Marshal
