@@ -36,8 +36,6 @@ update debug state = do
   let opcode = 0x100 * fromIntegral (instructions !! fromIntegral pc) + fromIntegral (instructions !! (fromIntegral pc + 1)) :: Word16
   when (printOpcode debug) $ printHex "Opcode" opcode
 
-  when (opcode .&. 0xf000 == 0xd000) $ print $ vRegisters state
-
   return $ case opcode of
     0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xf000 of
@@ -54,7 +52,10 @@ update debug state = do
             let height = opcode .&. 0x000f
             zipWith (\y row -> zipWith (\x pixel ->
                 if x > spriteX && x <= spriteX + 8 && y > spriteY && y <= spriteY + fromIntegral height
-                  then True
+                  then do
+                    let byte = fromIntegral $ y - spriteY - 1 :: Int
+                    let bit = fromIntegral $ x - spriteX - 1  :: Int
+                    0 /= ((128 `shiftR` bit) .&. instructions !! (fromIntegral (indexRegister state) + byte))
                   else screen state !! fromIntegral y !! fromIntegral x
               ) [0 :: Word8 ..] row) [0 :: Word8 ..] (screen state)
           }
