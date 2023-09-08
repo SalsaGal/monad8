@@ -36,21 +36,19 @@ update debug state = do
   let opcode = 0x100 * fromIntegral (instructions !! fromIntegral pc) + fromIntegral (instructions !! (fromIntegral pc + 1)) :: Word16
   when (printOpcode debug) $ printHex "Opcode" opcode
 
+  let regs = vRegisters state
+  let argX = fromIntegral opcode .&. 0x0f00 `div` 0x0100
+  let argNN = fromIntegral opcode .&. 0x00ff :: Word8
+
   return $ case opcode of
     0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xf000 of
       0x1000 -> state { programCounter = opcode .&. 0x0fff }
       0x6000 -> do
-        let regs = vRegisters state
-        let register = fromIntegral opcode .&. 0x0f00 `div` 0x0100
-        let value = fromIntegral opcode .&. 0x00ff :: Word8
-        incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop (register + 1) regs }
+        incrementPC state { vRegisters = take argX regs ++ [fromIntegral argNN] ++ drop (argX + 1) regs }
       0x7000 -> do
-        let regs = vRegisters state
-        let register = fromIntegral opcode .&. 0x0f00 `div` 0x0100
-        let value = fromIntegral opcode .&. 0x00ff :: Word8
-        let oldValue = regs !! register
-        incrementPC state { vRegisters = take register regs ++ [oldValue + fromIntegral value] ++ drop (register + 1) regs }
+        let oldValue = regs !! argX
+        incrementPC state { vRegisters = take argX regs ++ [oldValue + fromIntegral argNN] ++ drop (argX + 1) regs }
       0xa000 -> incrementPC state { indexRegister = fromIntegral opcode .&. 0x0fff }
       0xd000 -> incrementPC state { screen = do
             let spriteX = vRegisters state !! (fromIntegral opcode .&. 0x0f00 `div` 0x0100)
