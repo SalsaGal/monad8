@@ -45,6 +45,12 @@ update debug state = do
         let register = fromIntegral opcode .&. 0x0f00 `div` 0x0100
         let value = fromIntegral opcode .&. 0x00ff :: Word8
         incrementPC state { vRegisters = take register regs ++ [fromIntegral value] ++ drop (register + 1) regs }
+      0x7000 -> do
+        let regs = vRegisters state
+        let register = fromIntegral opcode .&. 0x0f00 `div` 0x0100
+        let value = fromIntegral opcode .&. 0x00ff :: Word8
+        let oldValue = regs !! register
+        incrementPC state { vRegisters = take register regs ++ [oldValue + fromIntegral value] ++ drop (register + 1) regs }
       0xa000 -> incrementPC state { indexRegister = fromIntegral opcode .&. 0x0fff }
       0xd000 -> incrementPC state { screen = do
             let spriteX = vRegisters state !! (fromIntegral opcode .&. 0x0f00 `div` 0x0100)
