@@ -38,12 +38,22 @@ update debug state = do
 
   let regs = vRegisters state
   let argX = fromIntegral opcode .&. 0x0f00 `div` 0x0100
+  let argY = fromIntegral opcode .&. 0x00f0 `div` 0x0010
   let argNN = fromIntegral opcode .&. 0x00ff :: Word8
 
   return $ case opcode of
     0x00e0 -> incrementPC state { screen = blankScreen }
     _ -> case opcode .&. 0xf000 of
       0x1000 -> state { programCounter = opcode .&. 0x0fff }
+      0x3000 -> if (vRegisters state !! argX) == argNN
+        then state { programCounter = programCounter state + 3 }
+        else incrementPC state
+      0x4000 -> if (vRegisters state !! argX) /= argNN
+        then state { programCounter = programCounter state + 3 }
+        else incrementPC state
+      0x5000 -> if (vRegisters state !! argX) /= (vRegisters state !! argY)
+        then state { programCounter = programCounter state + 3 }
+        else incrementPC state
       0x6000 -> do
         incrementPC state { vRegisters = take argX regs ++ [fromIntegral argNN] ++ drop (argX + 1) regs }
       0x7000 -> do
