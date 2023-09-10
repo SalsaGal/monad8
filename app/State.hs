@@ -46,13 +46,13 @@ update debug state = do
     _ -> case opcode .&. 0xf000 of
       0x1000 -> state { programCounter = opcode .&. 0x0fff }
       0x3000 -> if (vRegisters state !! argX) == argNN
-        then state { programCounter = programCounter state + 3 }
+        then state { programCounter = programCounter state + 4 }
         else incrementPC state
       0x4000 -> if (vRegisters state !! argX) /= argNN
-        then state { programCounter = programCounter state + 3 }
+        then state { programCounter = programCounter state + 4 }
         else incrementPC state
       0x5000 -> if (vRegisters state !! argX) /= (vRegisters state !! argY)
-        then state { programCounter = programCounter state + 3 }
+        then state { programCounter = programCounter state + 4 }
         else incrementPC state
       0x6000 -> do
         incrementPC state { vRegisters = take argX regs ++ [fromIntegral argNN] ++ drop (argX + 1) regs }
